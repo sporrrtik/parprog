@@ -1,7 +1,7 @@
 #include "lab1.h"
 #include <omp.h>
 
-#define N_THREADS 4
+#define N_THREADS 1
 
 int main(int args, char *argv[]) {
     int i, N1, N2, A;
@@ -25,10 +25,10 @@ int main(int args, char *argv[]) {
     }
     gettimeofday(&T1, NULL);
 
+    double* M1 = malloc(sizeof(double )*N1);
+    double* M2 = malloc(sizeof(double )*N2);
     for (i = 0; i < 100; i++) {
         unsigned int seed = i;
-        double* M1 = malloc(sizeof(double )*N1);
-        double* M2 = malloc(sizeof(double )*N2);
         generate_array(N1, M1, 1, A, seed);
 
         do_some_with_all_array_elem(N1, M1, exp_square_sqrt);
@@ -42,10 +42,10 @@ int main(int args, char *argv[]) {
         insertion_sort(N2, M2);
 
         double result = reduce(N2, M2);
-        free(M1);
-        free(M2);
         fprintf(S1, "%d %f\n", i, result);
     }
+    free(M1);
+    free(M2);
 
     gettimeofday(&T2, NULL);
     delta_ms = 1000000*(T2.tv_sec-T1.tv_sec)+T2.tv_usec-T1.tv_usec;
