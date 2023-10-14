@@ -24,25 +24,27 @@ int main(int args, char *argv[]) {
     }
     gettimeofday(&T1, NULL);
 
+    double *M1 = malloc(sizeof(double) * N1);
+    double *M2 = malloc(sizeof(double) * N2);
+    
     for (i = 0; i < 100; i++) {
-        double* M1 = malloc(sizeof(double)*N1);
-        double* M2 = malloc(sizeof(double)*N2);
         unsigned int seed = i;
         
         generate_array(N1, M1, 1, A, seed);
         fw_exp_sqrt(N1, M1);
         generate_array(N2, M2, A, 10 * A, seed);
         fw_preparing_M2(N2, M2);
-        fw_merge(N1, M1, N2, M2);
+        merge(N1, M1, N2, M2, min);
         insertion_sort(N2, M2);
         double result = reduce(N2, M2);
-        free(M1);
-        free(M2);
         fprintf(S1, "%d %f\n", i, result);
     }
+    
+    free(M1);
+    free(M2);
 
     gettimeofday(&T2, NULL);
-    delta_ms = 1000000*(T2.tv_sec-T1.tv_sec)+T2.tv_usec-T1.tv_usec;
+    delta_ms = 1000000 * (T2.tv_sec - T1.tv_sec) + T2.tv_usec - T1.tv_usec;
     printf("\nN=%d. Milliseconds passed: %ld\n", N1, delta_ms);
     fprintf(S2, "%d %ld\n", N1, delta_ms);
     fclose(S1);
@@ -66,9 +68,11 @@ double reduce(int n, double array[]) {
     return sum_sin_even;
 }
 
-void fw_merge(int array_len, double *array, int merge_array_len, double *merge_array) {
+void merge(int array_len, double array[], int merge_array_len, double merge_array[], double (*merge_func)(double, double)) {
     int len = min(array_len, merge_array_len);
-    fwsMinEvery_32f_I((const float*) array, (float*) merge_array, len);
+    for (int j = 0; j < len; j++) {
+        merge_array[j] = merge_func(array[j], merge_array[j]);
+    }
 }
 
 void fw_preparing_M2(int n, double *array) {
@@ -91,7 +95,7 @@ void copy_array(double from_array[], double to_array[], int len){
 }
 
 void fw_exp_sqrt(int n, double *array) {
-    fwsSqrt_64fc((const Fw64fc *) array, (Fw64fc *) array, n);
+    fwsSqrt_64f_I(array, n);
     fwsExp_64f(array, array, n);
 }
 
